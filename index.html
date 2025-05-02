@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Corretor de Gabarito</title>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
+    h1 { color: #333; }
+    textarea, input, button { margin: 10px 0; width: 100%; padding: 10px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #999; padding: 8px; text-align: center; }
+    th { background-color: #ddd; }
+    #contador { font-weight: bold; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Corretor de Gabarito</h1>
+
+  <label>📁 Carregar Gabarito Oficial (Excel ou PDF)</label>
+  <input type="file" accept=".xlsx,application/pdf" onchange="carregarGabaritoProfessor(event)">
+  <textarea id="gabarito" placeholder="Ou insira manualmente: A,B,C,D,A"></textarea>
+
+  <hr>
+  <h2>📥 Inserir Respostas do Aluno (PDF escaneado ou manual)</h2>
+  <input type="file" accept=".xlsx,application/pdf,image/*" onchange="lerArquivoGabarito(event)">
+  <textarea id="respostasAluno" placeholder="Ou insira manualmente: A,B,C,D,B"></textarea>
+  
+  <button onclick="corrigirManual()">Corrigir Manual</button>
+  <button onclick="iniciarCorrecao()">▶️ Iniciar Correção</button>
+
+  <div id="contador">Alunos corrigidos: 0</div>
+  <div id="resultado"></div>
+  <button onclick="exportarExcel()">📥 Baixar Excel</button>
+  <button onclick="exportarPDF()">📥 Baixar PDF</button>
+  <canvas id="canvasGabarito" style="display: none;"></canvas>
+
+  <script>
+    let todasCorrecao = [];
+    let contador = 0;
+    const LIMITE_QUESTOES = 180;
+
+    function exportarExcel() {
+      if (todasCorrecao.length === 0) {
+        alert("Nenhuma correção disponível para exportar.");
+        return;
+      }
+      const ws = XLSX.utils.aoa_to_sheet([[
+        "Aluno", "Questão", "Gabarito", "Resposta", "Acertou?"
+      ]].concat(todasCorrecao));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Correções");
+      XLSX.writeFile(wb, "correcoes.xlsx");
+    }
+
+    function exportarPDF() {
+      if (todasCorrecao.length === 0) {
+        alert("Nenhuma correção disponível para exportar.");
+        return;
+      }
+      const doc = new jsPDF({ orientation: "landscape" });
+      doc.setFontSize(12);
+      doc.text("Relatório de Correções de Gabarito", 14, 15);
+
+      const headers = [["Aluno", "Questão", "Gabarito", "Resposta", "Acertou?"]];
+      const data = todasCorrecao;
+
+      doc.autoTable({
+        head: headers,
+        body: data,
+        startY: 20,
+        styles: { fontSize: 10 },
+        theme: "striped",
+      });
+
+      doc.save("correcoes.pdf");
+    }
+
+    function iniciarCorrecao() {
+      alert("Função de correção em lote será implementada aqui.");
+      // Você pode implementar aqui a leitura em massa de alunos ou arquivos múltiplos.
+    }
+  </script>
+</body>
+</html>
